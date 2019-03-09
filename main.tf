@@ -1,5 +1,6 @@
 module "publish-user" {
-  source         = "github.com/akerl/terraform-aws-s3-publish"
+  source         = "armorfret/terraform-aws-s3-publish"
+  version        = "0.0.1"
   logging-bucket = "${var.logging-bucket}"
   publish-bucket = "${var.config-bucket}"
 }
@@ -57,7 +58,8 @@ resource "aws_sns_topic_subscription" "sub" {
 }
 
 module "lambda" {
-  source = "github.com/akerl/terraform-aws-lambda"
+  source  = "armorfret/lambda/aws"
+  version = "0.0.1"
 
   lambda-bucket  = "${var.lambda-bucket}"
   lambda-version = "${var.version}"
