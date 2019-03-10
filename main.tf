@@ -45,17 +45,17 @@ module "lambda" {
   source  = "armorfret/lambda/aws"
   version = "0.0.2"
 
-  lambda-bucket  = "${var.lambda_bucket}"
-  lambda-version = "${var.version}"
-  function-name  = "snstoslack-${var.config_bucket}"
+  source_bucket  = "${var.lambda_bucket}"
+  source_version = "${var.version}"
+  function_name  = "snstoslack-${var.config_bucket}"
 
-  environment-variables = {
+  environment_variables = {
     S3_BUCKET = "${var.config_bucket}"
     S3_KEY    = "config.yaml"
   }
 
-  access-policy-document = "${data.aws_iam_policy_document.lambda_perms.json}"
+  access_policy_document = "${data.aws_iam_policy_document.lambda_perms.json}"
 
-  source-types = ["sns"]
-  source-arns  = ["${aws_sns_topic.this.arn}"]
+  source_types = ["sns"]
+  source_arns  = ["${aws_sns_topic.this.arn}"]
 }
