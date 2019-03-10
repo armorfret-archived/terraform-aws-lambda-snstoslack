@@ -1,24 +1,8 @@
 module "publish-user" {
   source         = "armorfret/terraform-aws-s3-publish"
-  version        = "0.0.1"
-  logging-bucket = "${var.logging-bucket}"
-  publish-bucket = "${var.config-bucket}"
-}
-
-data "aws_iam_policy_document" "lambda_assume" {
-  statement {
-    actions = [
-      "sts:AssumeRole",
-    ]
-
-    principals {
-      type = "Service"
-
-      identifiers = [
-        "lambda.amazonaws.com",
-      ]
-    }
-  }
+  version        = "0.0.2"
+  logging_bucket = "${var.logging_bucket}"
+  publish_bucket = "${var.config_bucket}"
 }
 
 data "aws_iam_policy_document" "lambda_perms" {
@@ -29,8 +13,8 @@ data "aws_iam_policy_document" "lambda_perms" {
     ]
 
     resources = [
-      "arn:aws:s3:::${var.config-bucket}/*",
-      "arn:aws:s3:::${var.config-bucket}",
+      "arn:aws:s3:::${var.config_bucket}/*",
+      "arn:aws:s3:::${var.config_bucket}",
     ]
   }
 
@@ -47,32 +31,31 @@ data "aws_iam_policy_document" "lambda_perms" {
   }
 }
 
-resource "aws_sns_topic" "topic" {
-  name = "${var.topic}"
+resource "aws_sns_topic" "this" {
+  name = "${var.config_bucket}"
 }
 
-resource "aws_sns_topic_subscription" "sub" {
-  topic_arn = "${aws_sns_topic.topic.arn}"
+resource "aws_sns_topic_subscription" "this" {
+  topic_arn = "${aws_sns_topic.this.arn}"
   protocol  = "lambda"
-  endpoint  = "${aws_lambda_function.lambda.arn}"
+  endpoint  = "${module.lambda.arn}"
 }
 
 module "lambda" {
   source  = "armorfret/lambda/aws"
-  version = "0.0.1"
+  version = "0.0.2"
 
-  lambda-bucket  = "${var.lambda-bucket}"
+  lambda-bucket  = "${var.lambda_bucket}"
   lambda-version = "${var.version}"
-  function-name  = "sns-to-slack"
+  function-name  = "snstoslack-${var.config_bucket}"
 
   environment-variables = {
-    S3_BUCKET = "${var.config-bucket}"
+    S3_BUCKET = "${var.config_bucket}"
     S3_KEY    = "config.yaml"
   }
 
   access-policy-document = "${data.aws_iam_policy_document.lambda_perms.json}"
-  trust-policy-document  = "${data.aws_iam_policy_document.lambda_assume.json}"
 
   source-types = ["sns"]
-  source-arns  = ["${aws_sns_topic.topic.arn}"]
+  source-arns  = ["${aws_sns_topic.this.arn}"]
 }
