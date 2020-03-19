@@ -1,8 +1,8 @@
 module "publish-user" {
   source         = "armorfret/s3-publish/aws"
   version        = "0.1.0"
-  logging_bucket = "${var.logging_bucket}"
-  publish_bucket = "${var.config_bucket}"
+  logging_bucket = var.logging_bucket
+  publish_bucket = var.config_bucket
 }
 
 data "aws_iam_policy_document" "lambda_perms" {
@@ -32,30 +32,31 @@ data "aws_iam_policy_document" "lambda_perms" {
 }
 
 resource "aws_sns_topic" "this" {
-  name = "${var.config_bucket}"
+  name = var.config_bucket
 }
 
 resource "aws_sns_topic_subscription" "this" {
-  topic_arn = "${aws_sns_topic.this.arn}"
+  topic_arn = aws_sns_topic.this.arn
   protocol  = "lambda"
-  endpoint  = "${module.lambda.arn}"
+  endpoint  = module.lambda.arn
 }
 
 module "lambda" {
   source  = "armorfret/lambda/aws"
-  version = "0.0.2"
+  version = "0.0.3"
 
-  source_bucket  = "${var.lambda_bucket}"
-  source_version = "${var.version}"
+  source_bucket  = var.lambda_bucket
+  source_version = var.version
   function_name  = "snstoslack-${var.config_bucket}"
 
   environment_variables = {
-    S3_BUCKET = "${var.config_bucket}"
+    S3_BUCKET = var.config_bucket
     S3_KEY    = "config.yaml"
   }
 
-  access_policy_document = "${data.aws_iam_policy_document.lambda_perms.json}"
+  access_policy_document = data.aws_iam_policy_document.lambda_perms.json
 
   source_types = ["sns"]
-  source_arns  = ["${aws_sns_topic.this.arn}"]
+  source_arns  = [aws_sns_topic.this.arn]
 }
+
