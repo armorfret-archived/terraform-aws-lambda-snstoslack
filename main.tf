@@ -1,6 +1,14 @@
+terraform {
+  required_providers {
+    aws = {
+      version = "3.4.0"
+    }
+  }
+}
+
 module "publish-user" {
   source         = "armorfret/s3-publish/aws"
-  version        = "0.1.0"
+  version        = "0.1.1"
   logging_bucket = var.logging_bucket
   publish_bucket = var.config_bucket
 }
@@ -43,10 +51,10 @@ resource "aws_sns_topic_subscription" "this" {
 
 module "lambda" {
   source  = "armorfret/lambda/aws"
-  version = "0.0.3"
+  version = "0.0.4"
 
   source_bucket  = var.lambda_bucket
-  source_version = var.version
+  source_version = var.lambda_version
   function_name  = "snstoslack-${var.config_bucket}"
 
   environment_variables = {
